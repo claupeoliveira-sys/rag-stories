@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RAG — Histórias de Usuário</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+    <div class="logo">✦</div>
+    <h1>RAG Stories <span>— Gerador de Histórias de Usuário</span></h1>
+</header>
+
+<main>
+
+    <div class="card">
+        <div class="card-header">
+            <div class="card-title">
+                <div class="icon">📚</div>
+                Base de Conhecimento
+            </div>
+            <span class="badge" id="docCount">0</span>
+        </div>
+        <div class="upload-area" onclick="triggerUpload()">
+            <input type="file" id="inputFile" accept=".pdf" onchange="handleFileChange(event)">
+            <div class="upload-icon">📎</div>
+            <p><strong>Clique para adicionar</strong> um arquivo PDF</p>
+            <p style="margin-top:4px;font-size:12px;">Somente arquivos .pdf são aceitos</p>
+        </div>
+        <div class="doc-list" id="listaDocs"></div>
+    </div>
+
+    <div class="card viewer-wrapper" id="viewerWrapper">
+        <div class="viewer-header">
+            <div class="card-title">
+                <div class="icon">👁</div>
+                <span id="viewerTitle">Documento</span>
+            </div>
+            <button class="btn btn-outline" onclick="fecharVisualizador()">✕ Fechar</button>
+        </div>
+        <iframe id="iframePDF"></iframe>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <div class="card-title">
+                <div class="icon">✨</div>
+                Gerar Histórias de Usuário
+            </div>
+        </div>
+        <textarea
+            id="query"
+            rows="4"
+            placeholder="Descreva o tipo de história de usuário que está buscando. Ex: histórias relacionadas ao processo de matrícula para alunos de pós-graduação..."
+        ></textarea>
+        <div class="generate-actions">
+            <button class="btn btn-primary" id="btnGerar" onclick="gerarHistorias()">✦ Executar</button>
+            <div class="loading-indicator" id="loadingMsg">
+                <div class="spinner"></div>
+                Processando com IA...
+            </div>
+        </div>
+    </div>
+
+    <div class="card result-section" id="resultSection">
+        <div class="result-header">
+            <div class="card-title">
+                <div class="icon">📋</div>
+                Histórias Geradas
+            </div>
+            <button class="btn btn-success" onclick="baixarTxt()">⬇ Baixar .txt</button>
+        </div>
+        <textarea id="resultado" rows="14" readonly placeholder="As histórias geradas aparecerão aqui..."></textarea>
+    </div>
+
+</main>
+
+<div class="toast" id="toast"></div>
+<script src="app.js"></script>
+</body>
+</html>
