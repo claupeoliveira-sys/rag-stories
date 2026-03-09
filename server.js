@@ -1,11 +1,10 @@
 require('dotenv').config();
 const express = require('express');
-const multer = require('multer');
+const Busboy = require('busboy');
 const fetch = require('node-fetch');
 const { createClient } = require('@supabase/supabase-js');
 
 const app = express();
-const upload = multer({ storage: multer.memoryStorage() });
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
 
 app.use(express.json());
@@ -21,42 +20,57 @@ app.get('/api/documents', async (req, res) => {
     res.json(data);
 });
 
-// Upload de PDF
-app.post('/api/upload', upload.single('file'), async (req, res) => {
-    const file = req.file;
-    const fileName = `${Date.now()}_${file.originalname}`;
+// Upload de PDF usando Busboy
+app.post('/api/upload', (req, res) => {
+    const bb = Busboy({ headers: req.headers });
+    let fileBuffer = [];
+    let fileName = '';
+    let originalName = '';
 
-    const { error: uploadError } = await supabase.storage
-        .from('documentos')
-        .upload(fileName, file.buffer, { contentType: 'application/pdf' });
-
-    if (uploadError) return res.status(500).json({ error: uploadError });
-
-    const { data: publicUrlData } = supabase.storage
-        .from('documentos')
-        .getPublicUrl(fileName);
-
-    await supabase.from('documents').insert({
-        name: file.originalname,
-        file_path: fileName,
-        public_url: publicUrlData.publicUrl
+    bb.on('file', (name, file, info) => {
+        originalName = info.filename;
+        fileName = `${Date.now()}_${info.filename}`;
+        file.on('data', (data) => fileBuffer.push(data));
     });
 
-    await fetch(process.env.N8N_WEBHOOK_INGESTAO, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            pdf_url: publicUrlData.publicUrl,
-            document_id: fileName
-        })
+    bb.on('finish', async () => {
+        const buffer = Buffer.concat(fileBuffer);
+
+        const { error: uploadError } = await supabase.storage
+            .from('documentos')
+            .upload(fileName, buffer, { contentType: 'application/pdf' });
+
+        if (uploadError) return res.status(500).json({ error: uploadError });
+
+        const { data: publicUrlData } = supabase.storage
+            .from('documentos')
+            .getPublicUrl(fileName);
+
+        await supabase.from('documents').insert({
+            name: originalName,
+            file_path: fileName,
+            public_url: publicUrlData.publicUrl
+        });
+
+        await fetch(process.env.N8N_WEBHOOK_INGESTAO, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                pdf_url: publicUrlData.publicUrl,
+                document_id: fileName
+            })
+        });
+
+        res.json({ success: true });
     });
 
-    res.json({ success: true });
+    req.pipe(bb);
 });
 
 // Deletar documento
 app.delete('/api/documents/:id', async (req, res) => {
     const { id } = req.params;
+
     const { data: doc } = await supabase
         .from('documents')
         .select('file_path')
@@ -73,13 +87,15 @@ app.delete('/api/documents/:id', async (req, res) => {
 // Gerar histórias via RAG
 app.post('/api/generate', async (req, res) => {
     const { query } = req.body;
+
     const response = await fetch(process.env.N8N_WEBHOOK_BUSCA, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ query })
     });
+
     const data = await response.json();
     res.json(data);
 });
 
-module.exports = app;);
+module.exports = app;
