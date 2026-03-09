@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RAG — Histórias de Usuário</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --danger: #ef4444;
+            --success: #10b981;
+            --success-hover: #059669;
+            --bg: #f8fafc;
+            --surface: #ffffff;
+            --border: #e2e8f0;
+            --text: #1e293b;
+            --muted: #64748b;
+            --radius: 12px;
+            --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.06);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        header {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 20px 40px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        header .logo {
+            width: 36px;
+            height: 36px;
+            background: var(--primary);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 18px;
+        }
+
+        header h1 { font-size: 18px; font-weight: 600; }
+        header span { font-size: 13px; color: var(--muted); margin-left: 4px; }
+
+        main {
+            max-width: 960px;
+            margin: 40px auto;
+            padding: 0 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 28px;
+            box-shadow: var(--shadow);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .card-title {
+            font-size: 15px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card-title .icon {
+            width: 28px;
+            height: 28px;
+            background: #ede9fe;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+
+        .badge {
+            font-size: 12px;
+            background: #f1f5f9;
+            color: var(--muted);
+            padding: 3px 10px;
+            border-radius: 999px;
+            font-weight: 500;
+        }
+
+        .upload-area {
+            border: 2px dashed var(--border);
+            border-radius: 10px;
+            padding: 32px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 20px;
+            background: #fafafa;
+        }
+
+        .upload-area:hover { border-color: var(--primary); background: #f5f3ff; }
+        .upload-area input[type="file"] { display: none; }
+        .upload-area .upload-icon { font-size: 32px; margin-bottom: 8px; }
+        .upload-area p { font-size: 14px; color: var(--muted); }
+        .upload-area p strong { color: var(--primary); }
+
+        .doc-list { display: flex; flex-direction: column; gap: 8px; }
+
+        .doc-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            transition: all 0.15s;
+        }
+
+        .doc-item:hover { background: #f8fafc; border-color: #c7d2fe; }
+        .doc-info { display: flex; align-items: center; gap: 10px; }
+
+        .doc-icon {
+            width: 32px;
+            height: 32px;
+            background: #fee2e2;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+
+        .doc-name {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--primary);
+            cursor: pointer;
+        }
+
+        .doc-name:hover { text-decoration: underline; }
+        .doc-date { font-size: 12px; color: var(--muted); margin-top: 2px; }
+        .doc-actions { display: flex; gap: 8px; }
+
+        .btn {
+            padding: 9px 18px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.15s;
+        }
+
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: var(--primary-hover); }
+        .btn-primary:disabled { background: #a5b4fc; cursor: not-allowed; }
+        .btn-danger { background: #fef2f2; color: var(--danger); border: 1px solid #fecaca; }
+        .btn-danger:hover { background: #fee2e2; }
+        .btn-success { background: var(--success); color: white; }
+        .btn-success:hover { background: var(--success-hover); }
+        .btn-outline { background: white; color: var(--text); border: 1px solid var(--border); }
+        .btn-outline:hover { background: #f8fafc; }
+
+        .viewer-wrapper { display: none; }
+        .viewer-wrapper.open { display: block; }
+
+        .viewer-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        iframe {
+            width: 100%;
+            height: 420px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+        }
+
+        textarea {
+            width: 100%;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 14px;
+            font-size: 14px;
+            font-family: inherit;
+            color: var(--text);
+            resize: vertical;
+            transition: border 0.15s;
+            background: white;
+            line-height: 1.6;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+
+        textarea[readonly] { background: #f8fafc; }
+
+        .generate-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 14px;
+        }
+
+        .loading-indicator {
+            display: none;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: var(--muted);
+        }
+
+        .loading-indicator.visible { display: flex; }
+
+        .spinner {
+            width: 16px;
+            height: 16px;
+            border: 2px solid #e2e8f0;
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .result-section { display: none; }
+        .result-section.visible { display: block; }
+
+        .result-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 14px;
+        }
+
+        .empty-state { text-align: center; padding: 40px 20px; color: var(--muted); }
+        .empty-state .empty-icon { font-size: 36px; margin-bottom: 10px; }
+        .empty-state p { font-size: 14px; }
+
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: #1e293b;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 13px;
+            opacity: 0;
+            transform: translateY(8px);
+            transition: all 0.3s;
+            z-index: 999;
+        }
+
+        .toast.show { opacity: 1; transform: translateY(0); }
+
+        @media (max-width: 640px) {
+            main { padding: 0 16px; margin: 20px auto; }
+            header { padding: 16px 20px; }
+            .card { padding: 20px; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="logo">✦</div>
+    <h1>RAG Stories <span>— Gerador de Histórias de Usuário</span></h1>
+</header>
+
+<main>
+
+    <div class="card">
+        <div class="card-header">
+            <div class="card-title">
+                <div class="icon">📚</div>
+                Base de Conhecimento
+            </div>
+            <span class="badge" id="docCount">0</span>
+        </div>
+        <div class="upload-area" onclick="triggerUpload()">
+            <input type="file" id="inputFile" accept=".pdf" onchange="handleFileChange(event)">
+            <div class="upload-icon">📎</div>
+            <p><strong>Clique para adicionar</strong> um arquivo PDF</p>
+            <p style="margin-top:4px;font-size:12px;">Somente arquivos .pdf são aceitos</p>
+        </div>
+        <div class="doc-list" id="listaDocs"></div>
+    </div>
+
+    <div class="card viewer-wrapper" id="viewerWrapper">
+        <div class="viewer-header">
+            <div class="card-title">
+                <div class="icon">👁</div>
+                <span id="viewerTitle">Documento</span>
+            </div>
+            <button class="btn btn-outline" onclick="fecharVisualizador()">✕ Fechar</button>
+        </div>
+        <iframe id="iframePDF"></iframe>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <div class="card-title">
+                <div class="icon">✨</div>
+                Gerar Histórias de Usuário
+            </div>
+        </div>
+        <textarea
+            id="query"
+            rows="4"
+            placeholder="Descreva o tipo de história de usuário que está buscando. Ex: histórias relacionadas ao processo de matrícula para alunos de pós-graduação..."
+        ></textarea>
+        <div class="generate-actions">
+            <button class="btn btn-primary" id="btnGerar" onclick="gerarHistorias()">✦ Executar</button>
+            <div class="loading-indicator" id="loadingMsg">
+                <div class="spinner"></div>
+                Processando com IA...
+            </div>
+        </div>
+    </div>
+
+    <div class="card result-section" id="resultSection">
+        <div class="result-header">
+            <div class="card-title">
+                <div class="icon">📋</div>
+                Histórias Geradas
+            </div>
+            <button class="btn btn-success" onclick="baixarTxt()">⬇ Baixar .txt</button>
+        </div>
+        <textarea id="resultado" rows="14" readonly placeholder="As histórias geradas aparecerão aqui..."></textarea>
+    </div>
+
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+    async function carregarDocs() {
+        const res = await fetch('/api/documents');
+        const docs = await res.json();
+        const lista = document.getElementById('listaDocs');
+        const badge = document.getElementById('docCount');
+
+        badge.textContent = docs.length;
+
+        if (docs.length === 0) {
+            lista.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-icon">📂</div>
+                    <p>Nenhum documento na base de conhecimento.</p>
+                </div>`;
+            return;
+        }
+
+        lista.innerHTML = docs.map(doc => `
+            <div class="doc-item" id="doc-${doc.id}">
+                <div class="doc-info">
+                    <div class="doc-icon">📄</div>
+                    <div>
+                        <div class="doc-name" onclick="visualizar('${doc.public_url}', '${doc.name}')">${doc.name}</div>
+                        <div class="doc-date">${new Date(doc.created_at).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' })}</div>
+                    </div>
+                </div>
+                <div class="doc-actions">
+                    <button class="btn btn-outline" onclick="visualizar('${doc.public_url}', '${doc.name}')">👁 Ver</button>
+                    <button class="btn btn-danger" onclick="deletar('${doc.id}', '${doc.name}')">🗑 Excluir</button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function triggerUpload() {
+        document.getElementById('inputFile').click();
+    }
+
+    async function handleFileChange(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        showToast(`Enviando ${file.name}...`);
+        const formData = new FormData();
+        formData.append('file', file);
+        const res = await fetch('/api/upload', { method: 'POST', body: formData });
+        if (res.ok) {
+            showToast('Documento adicionado e ingestão iniciada!');
+            carregarDocs();
+        } else {
+            showToast('Erro ao enviar o arquivo.');
+        }
+        e.target.value = '';
+    }
+
+    async function deletar(id, nome) {
+        if (!confirm(`Deseja excluir "${nome}"?`)) return;
+        const res = await fetch(`/api/documents/${id}`, { method: 'DELETE' });
+        if (res.ok) {
+            showToast('Documento excluído.');
+            carregarDocs();
+            fecharVisualizador();
+        }
+    }
+
+    function visualizar(url, nome) {
+        document.getElementById('iframePDF').src = url;
+        document.getElementById('viewerTitle').textContent = nome;
+        document.getElementById('viewerWrapper').classList.add('open');
+        document.getElementById('viewerWrapper').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function fecharVisualizador() {
+        document.getElementById('viewerWrapper').classList.remove('open');
+        document.getElementById('iframePDF').src = '';
+    }
+
+    async function gerarHistorias() {
+        const query = document.getElementById('query').value.trim();
+        if (!query) return showToast('Digite o que você está buscando.');
+
+        const btn = document.getElementById('btnGerar');
+        const loading = document.getElementById('loadingMsg');
+        const resultSection = document.getElementById('resultSection');
+
+        btn.disabled = true;
+        loading.classList.add('visible');
+        resultSection.classList.remove('visible');
+
+        const res = await fetch('/api/generate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ query })
+        });
+
+        const data = await res.json();
+        const texto = data.text || data.content || data.output || JSON.stringify(data, null, 2);
+
+        document.getElementById('resultado').value = texto;
+        btn.disabled = false;
+        loading.classList.remove('visible');
+        resultSection.classList.add('visible');
+        resultSection.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function baixarTxt() {
+        const texto = document.getElementById('resultado').value;
+        const blob = new Blob([texto], { type: 'text/plain;charset=utf-8' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `historias-usuario-${Date.now()}.txt`;
+        a.click();
+        showToast('Download iniciado!');
+    }
+
+    function showToast(msg) {
+        const toast = document.getElementById('toast');
+        toast.textContent = msg;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+
+    carregarDocs();
+</script>
+
+</body>
+</html>
