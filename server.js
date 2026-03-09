@@ -9,7 +9,6 @@ const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANO
 
 app.use(express.json());
 
-// Listar documentos
 app.get('/api/documents', async (req, res) => {
     const { data, error } = await supabase
         .from('documents')
@@ -19,7 +18,6 @@ app.get('/api/documents', async (req, res) => {
     res.json(data);
 });
 
-// Upload de PDF usando Busboy
 app.post('/api/upload', (req, res) => {
     const bb = Busboy({ headers: req.headers });
     let fileBuffer = [];
@@ -66,7 +64,6 @@ app.post('/api/upload', (req, res) => {
     req.pipe(bb);
 });
 
-// Deletar documento
 app.delete('/api/documents/:id', async (req, res) => {
     const { id } = req.params;
 
@@ -83,7 +80,6 @@ app.delete('/api/documents/:id', async (req, res) => {
     res.json({ success: true });
 });
 
-// Gerar histórias via RAG
 app.post('/api/generate', async (req, res) => {
     const { query } = req.body;
 
