@@ -8,7 +8,6 @@ const app = express();
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
 
 app.use(express.json());
-app.use(express.static('public'));
 
 // Listar documentos
 app.get('/api/documents', async (req, res) => {
