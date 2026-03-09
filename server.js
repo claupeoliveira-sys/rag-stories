@@ -82,6 +82,4 @@ app.post('/api/generate', async (req, res) => {
     res.json(data);
 });
 
-app.listen(process.env.PORT || 3000, () => {
-    console.log('Servidor rodando');
-});
+module.exports = app;);
