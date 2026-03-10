@@ -283,6 +283,17 @@
 
         .toast.show { opacity: 1; transform: translateY(0); }
 
+        @media print {
+            .print-area {
+                font-family: 'Inter', sans-serif;
+                font-size: 13px;
+                line-height: 1.7;
+                color: #1e293b;
+                white-space: pre-wrap;
+                padding: 40px;
+            }
+        }
+
         @media (max-width: 640px) {
             main { padding: 0 16px; margin: 20px auto; }
             header { padding: 16px 20px; }
@@ -354,7 +365,10 @@
                 <div class="icon">📋</div>
                 Histórias Geradas
             </div>
-            <button class="btn btn-success" onclick="baixarTxt()">⬇ Baixar .txt</button>
+            <div style="display:flex;gap:8px;">
+                <button class="btn btn-outline" onclick="baixarTxt()">⬇ Baixar .txt</button>
+                <button class="btn btn-success" onclick="baixarPdf()">⬇ Baixar .pdf</button>
+            </div>
         </div>
         <textarea id="resultado" rows="14" readonly placeholder="As histórias geradas aparecerão aqui..."></textarea>
     </div>
@@ -476,6 +490,33 @@
         a.download = `historias-usuario-${Date.now()}.txt`;
         a.click();
         showToast('Download iniciado!');
+    }
+
+    function baixarPdf() {
+        const texto = document.getElementById('resultado').value;
+        const janela = window.open('', '_blank');
+        janela.document.write(`
+            <html>
+            <head>
+                <title>Histórias de Usuário</title>
+                <style>
+                    body {
+                        font-family: 'Inter', Arial, sans-serif;
+                        font-size: 13px;
+                        line-height: 1.7;
+                        color: #1e293b;
+                        padding: 40px;
+                        white-space: pre-wrap;
+                    }
+                </style>
+            </head>
+            <body>${texto.replace(/</g, '<').replace(/>/g, '>')}</body>
+            </html>
+        `);
+        janela.document.close();
+        janela.focus();
+        janela.print();
+        showToast('Janela de impressão aberta — salve como PDF.');
     }
 
     function showToast(msg) {
