@@ -184,9 +184,20 @@ app.post('/api/generate', async (req, res) => {
         });
 
         console.log('Status do webhook busca:', response.status);
-        const data = await response.json();
-        console.log('Resposta do webhook:', JSON.stringify(data));
-        res.json(data);
+        const text = await response.text();
+        console.log('Resposta raw do webhook:', text);
+
+        if (!text || text.trim() === '') {
+            return res.status(500).json({ error: 'n8n retornou resposta vazia' });
+        }
+
+        try {
+            const data = JSON.parse(text);
+            res.json(data);
+        } catch (e) {
+            res.json({ output: text });
+        }
+
     } catch (err) {
         console.error('Erro no generate:', err.message, err.stack);
         res.status(500).json({ error: err.message });
