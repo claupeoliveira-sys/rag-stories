@@ -1,6 +1,5 @@
 require('dotenv').config();
 const express = require('express');
-const { default: Busboy } = require('busboy');
 const fetch = require('node-fetch');
 const { createClient } = require('@supabase/supabase-js');
 
@@ -18,26 +17,68 @@ app.get('/api/documents', async (req, res) => {
     res.json(data);
 });
 
-app.post('/api/upload', (req, res) => {
-    const bb = Busboy({ headers: req.headers });
-    let fileBuffer = [];
-    let fileName = '';
-    let originalName = '';
+app.post('/api/upload', async (req, res) => {
+    try {
+        const chunks = [];
+        await new Promise((resolve, reject) => {
+            req.on('data', chunk => chunks.push(chunk));
+            req.on('end', resolve);
+            req.on('error', reject);
+        });
 
-    bb.on('file', (name, file, info) => {
-        originalName = info.filename;
-        fileName = `${Date.now()}_${info.filename}`;
-        file.on('data', (data) => fileBuffer.push(data));
-    });
+        const body = Buffer.concat(chunks);
+        const contentType = req.headers['content-type'] || '';
+        const boundary = contentType.split('boundary=')[1];
 
-    bb.on('finish', async () => {
-        const buffer = Buffer.concat(fileBuffer);
+        if (!boundary) {
+            return res.status(400).json({ error: 'Boundary não encontrado' });
+        }
+
+        const boundaryBuffer = Buffer.from('--' + boundary);
+        const parts = [];
+        let start = 0;
+
+        for (let i = 0; i < body.length; i++) {
+            if (body.slice(i, i + boundaryBuffer.length).equals(boundaryBuffer)) {
+                if (start !== 0) {
+                    parts.push(body.slice(start, i - 2));
+                }
+                start = i + boundaryBuffer.length + 2;
+            }
+        }
+
+        let fileBuffer = null;
+        let originalName = '';
+
+        for (const part of parts) {
+            const headerEnd = part.indexOf('\r\n\r\n');
+            if (headerEnd === -1) continue;
+
+            const headerStr = part.slice(0, headerEnd).toString();
+            const fileData = part.slice(headerEnd + 4);
+
+            if (headerStr.includes('filename=')) {
+                const match = headerStr.match(/filename="([^"]+)"/);
+                if (match) originalName = match[1];
+                fileBuffer = fileData;
+            }
+        }
+
+        if (!fileBuffer || !originalName) {
+            return res.status(400).json({ error: 'Arquivo não encontrado no upload' });
+        }
+
+        const fileName = `${Date.now()}_${originalName}`;
+        console.log('Arquivo recebido:', originalName, 'Tamanho:', fileBuffer.length);
 
         const { error: uploadError } = await supabase.storage
             .from('documentos')
-            .upload(fileName, buffer, { contentType: 'application/pdf' });
+            .upload(fileName, fileBuffer, { contentType: 'application/pdf' });
 
-        if (uploadError) return res.status(500).json({ error: uploadError });
+        if (uploadError) {
+            console.error('Erro Supabase storage:', uploadError);
+            return res.status(500).json({ error: uploadError.message });
+        }
 
         const { data: publicUrlData } = supabase.storage
             .from('documentos')
@@ -59,9 +100,11 @@ app.post('/api/upload', (req, res) => {
         });
 
         res.json({ success: true });
-    });
 
-    req.pipe(bb);
+    } catch (err) {
+        console.error('Erro no upload:', err);
+        res.status(500).json({ error: err.message });
+    }
 });
 
 app.delete('/api/documents/:id', async (req, res) => {
