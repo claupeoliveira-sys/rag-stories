@@ -109,22 +109,9 @@
             min-width: 200px;
         }
 
-        .hero-card .hc-icon {
-            font-size: 20px;
-            margin-bottom: 8px;
-        }
-
-        .hero-card .hc-title {
-            font-size: 13px;
-            font-weight: 600;
-            margin-bottom: 4px;
-        }
-
-        .hero-card .hc-desc {
-            font-size: 12px;
-            opacity: 0.8;
-            line-height: 1.5;
-        }
+        .hero-card .hc-icon { font-size: 20px; margin-bottom: 8px; }
+        .hero-card .hc-title { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+        .hero-card .hc-desc { font-size: 12px; opacity: 0.8; line-height: 1.5; }
 
         main {
             max-width: 960px;
@@ -255,9 +242,6 @@
         .btn-success:hover { background: var(--success-hover); }
         .btn-outline { background: white; color: var(--text); border: 1px solid var(--border); }
         .btn-outline:hover { background: #f8fafc; }
-        .btn-indigo { background: #ede9fe; color: var(--primary); border: 1px solid #c7d2fe; }
-        .btn-indigo:hover { background: #ddd6fe; }
-        .btn-indigo:disabled { opacity: 0.5; cursor: not-allowed; }
 
         .viewer-wrapper { display: none; }
         .viewer-wrapper.open { display: block; }
@@ -334,14 +318,6 @@
             align-items: center;
             justify-content: space-between;
             margin-bottom: 14px;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-
-        .result-actions {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
         }
 
         .empty-state { text-align: center; padding: 40px 20px; color: var(--muted); }
@@ -361,7 +337,6 @@
             transform: translateY(8px);
             transition: all 0.3s;
             z-index: 999;
-            max-width: 320px;
         }
 
         .toast.show { opacity: 1; transform: translateY(0); }
@@ -465,8 +440,7 @@
                 <div class="icon">📋</div>
                 Histórias Geradas
             </div>
-            <div class="result-actions">
-                <button class="btn btn-indigo" id="btnAdicionarBase" onclick="adicionarABase()">📥 Adicionar à Base</button>
+            <div style="display:flex;gap:8px;">
                 <button class="btn btn-outline" onclick="baixarTxt()">⬇ Baixar .txt</button>
                 <button class="btn btn-success" onclick="baixarPdf()">⬇ Baixar .pdf</button>
             </div>
@@ -583,59 +557,6 @@
         resultSection.scrollIntoView({ behavior: 'smooth' });
     }
 
-    async function adicionarABase() {
-        const texto = document.getElementById('resultado').value;
-        if (!texto) return showToast('Nenhum conteúdo gerado ainda.');
-
-        const btn = document.getElementById('btnAdicionarBase');
-        btn.disabled = true;
-        btn.textContent = '⏳ Enviando...';
-
-        try {
-            const nomeArquivo = `historias-usuario-${Date.now()}.pdf`;
-            const janela = window.open('', '_blank');
-            janela.document.write(`
-                <html>
-                <head>
-                    <title>Histórias de Usuário</title>
-                    <style>
-                        body {
-                            font-family: Arial, sans-serif;
-                            font-size: 13px;
-                            line-height: 1.7;
-                            color: #1e293b;
-                            padding: 40px;
-                            white-space: pre-wrap;
-                        }
-                    </style>
-                </head>
-                <body>${texto.replace(/</g, '<').replace(/>/g, '>')}</body>
-                </html>
-            `);
-            janela.document.close();
-
-            const blob = new Blob([texto], { type: 'text/plain;charset=utf-8' });
-            const file = new File([blob], nomeArquivo.replace('.pdf', '.txt'), { type: 'text/plain' });
-
-            const formData = new FormData();
-            formData.append('file', file);
-
-            const res = await fetch('/api/upload', { method: 'POST', body: formData });
-
-            if (res.ok) {
-                showToast('✅ Histórias adicionadas à base de conhecimento!');
-                carregarDocs();
-            } else {
-                showToast('Erro ao adicionar à base.');
-            }
-        } catch (err) {
-            showToast('Erro inesperado ao adicionar à base.');
-        }
-
-        btn.disabled = false;
-        btn.innerHTML = '📥 Adicionar à Base';
-    }
-
     function baixarTxt() {
         const texto = document.getElementById('resultado').value;
         const blob = new Blob([texto], { type: 'text/plain;charset=utf-8' });
@@ -670,5 +591,18 @@
         janela.document.close();
         janela.focus();
         janela.print();
-        showToast('Janela de impress
+        showToast('Janela de impressão aberta — salve como PDF.');
+    }
 
+    function showToast(msg) {
+        const toast = document.getElementById('toast');
+        toast.textContent = msg;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+
+    carregarDocs();
+</script>
+
+</body>
+</html>
