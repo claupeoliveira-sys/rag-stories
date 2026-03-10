@@ -55,6 +55,77 @@
         header h1 { font-size: 18px; font-weight: 600; }
         header span { font-size: 13px; color: var(--muted); margin-left: 4px; }
 
+        .hero {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            color: white;
+            padding: 40px;
+        }
+
+        .hero-inner {
+            max-width: 960px;
+            margin: 0 auto;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.25);
+            border-radius: 999px;
+            padding: 4px 14px;
+            font-size: 12px;
+            font-weight: 500;
+            margin-bottom: 16px;
+        }
+
+        .hero h2 {
+            font-size: 26px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            line-height: 1.3;
+        }
+
+        .hero p {
+            font-size: 14px;
+            line-height: 1.7;
+            opacity: 0.9;
+            max-width: 720px;
+            margin-bottom: 24px;
+        }
+
+        .hero-cards {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .hero-card {
+            background: rgba(255,255,255,0.12);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 10px;
+            padding: 16px 20px;
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .hero-card .hc-icon {
+            font-size: 20px;
+            margin-bottom: 8px;
+        }
+
+        .hero-card .hc-title {
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .hero-card .hc-desc {
+            font-size: 12px;
+            opacity: 0.8;
+            line-height: 1.5;
+        }
+
         main {
             max-width: 960px;
             margin: 40px auto;
@@ -184,6 +255,9 @@
         .btn-success:hover { background: var(--success-hover); }
         .btn-outline { background: white; color: var(--text); border: 1px solid var(--border); }
         .btn-outline:hover { background: #f8fafc; }
+        .btn-indigo { background: #ede9fe; color: var(--primary); border: 1px solid #c7d2fe; }
+        .btn-indigo:hover { background: #ddd6fe; }
+        .btn-indigo:disabled { opacity: 0.5; cursor: not-allowed; }
 
         .viewer-wrapper { display: none; }
         .viewer-wrapper.open { display: block; }
@@ -260,6 +334,14 @@
             align-items: center;
             justify-content: space-between;
             margin-bottom: 14px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .result-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
         }
 
         .empty-state { text-align: center; padding: 40px 20px; color: var(--muted); }
@@ -279,25 +361,18 @@
             transform: translateY(8px);
             transition: all 0.3s;
             z-index: 999;
+            max-width: 320px;
         }
 
         .toast.show { opacity: 1; transform: translateY(0); }
-
-        @media print {
-            .print-area {
-                font-family: 'Inter', sans-serif;
-                font-size: 13px;
-                line-height: 1.7;
-                color: #1e293b;
-                white-space: pre-wrap;
-                padding: 40px;
-            }
-        }
 
         @media (max-width: 640px) {
             main { padding: 0 16px; margin: 20px auto; }
             header { padding: 16px 20px; }
             .card { padding: 20px; }
+            .hero { padding: 28px 20px; }
+            .hero h2 { font-size: 20px; }
+            .hero-cards { flex-direction: column; }
         }
     </style>
 </head>
@@ -307,6 +382,31 @@
     <div class="logo">✦</div>
     <h1>RAG Stories <span>— Gerador de Histórias de Usuário</span></h1>
 </header>
+
+<div class="hero">
+    <div class="hero-inner">
+        <div class="hero-badge">✦ Powered by RAG + IA Generativa</div>
+        <h2>Gere Histórias de Usuário a partir dos seus documentos</h2>
+        <p>Este sistema foi projetado para equipes que trabalham com grandes volumes de documentos e precisam transformar esse conhecimento em requisitos ágeis de forma rápida e precisa. Utilizando a técnica RAG — Retrieval-Augmented Generation — a IA não apenas gera texto: ela primeiro busca os trechos mais relevantes dos seus documentos, e só então usa esse contexto real para criar histórias de usuário fundamentadas no que está escrito, não em suposições.</p>
+        <div class="hero-cards">
+            <div class="hero-card">
+                <div class="hc-icon">🔍</div>
+                <div class="hc-title">O que é RAG?</div>
+                <div class="hc-desc">RAG combina busca semântica com geração de texto. A IA recupera os trechos certos dos seus documentos antes de responder, garantindo precisão e rastreabilidade.</div>
+            </div>
+            <div class="hero-card">
+                <div class="hc-icon">📚</div>
+                <div class="hc-title">Feito para muitos documentos</div>
+                <div class="hc-desc">Adicione regulamentos, manuais, entrevistas e especificações. O sistema indexa tudo e sabe exatamente onde buscar para cada solicitação.</div>
+            </div>
+            <div class="hero-card">
+                <div class="hc-icon">⚡</div>
+                <div class="hc-title">Do documento ao requisito</div>
+                <div class="hc-desc">Em segundos, transforme páginas de documentação em histórias de usuário no formato ágil, prontas para o seu backlog.</div>
+            </div>
+        </div>
+    </div>
+</div>
 
 <main>
 
@@ -365,7 +465,8 @@
                 <div class="icon">📋</div>
                 Histórias Geradas
             </div>
-            <div style="display:flex;gap:8px;">
+            <div class="result-actions">
+                <button class="btn btn-indigo" id="btnAdicionarBase" onclick="adicionarABase()">📥 Adicionar à Base</button>
                 <button class="btn btn-outline" onclick="baixarTxt()">⬇ Baixar .txt</button>
                 <button class="btn btn-success" onclick="baixarPdf()">⬇ Baixar .pdf</button>
             </div>
@@ -482,6 +583,59 @@
         resultSection.scrollIntoView({ behavior: 'smooth' });
     }
 
+    async function adicionarABase() {
+        const texto = document.getElementById('resultado').value;
+        if (!texto) return showToast('Nenhum conteúdo gerado ainda.');
+
+        const btn = document.getElementById('btnAdicionarBase');
+        btn.disabled = true;
+        btn.textContent = '⏳ Enviando...';
+
+        try {
+            const nomeArquivo = `historias-usuario-${Date.now()}.pdf`;
+            const janela = window.open('', '_blank');
+            janela.document.write(`
+                <html>
+                <head>
+                    <title>Histórias de Usuário</title>
+                    <style>
+                        body {
+                            font-family: Arial, sans-serif;
+                            font-size: 13px;
+                            line-height: 1.7;
+                            color: #1e293b;
+                            padding: 40px;
+                            white-space: pre-wrap;
+                        }
+                    </style>
+                </head>
+                <body>${texto.replace(/</g, '<').replace(/>/g, '>')}</body>
+                </html>
+            `);
+            janela.document.close();
+
+            const blob = new Blob([texto], { type: 'text/plain;charset=utf-8' });
+            const file = new File([blob], nomeArquivo.replace('.pdf', '.txt'), { type: 'text/plain' });
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            const res = await fetch('/api/upload', { method: 'POST', body: formData });
+
+            if (res.ok) {
+                showToast('✅ Histórias adicionadas à base de conhecimento!');
+                carregarDocs();
+            } else {
+                showToast('Erro ao adicionar à base.');
+            }
+        } catch (err) {
+            showToast('Erro inesperado ao adicionar à base.');
+        }
+
+        btn.disabled = false;
+        btn.innerHTML = '📥 Adicionar à Base';
+    }
+
     function baixarTxt() {
         const texto = document.getElementById('resultado').value;
         const blob = new Blob([texto], { type: 'text/plain;charset=utf-8' });
@@ -501,7 +655,7 @@
                 <title>Histórias de Usuário</title>
                 <style>
                     body {
-                        font-family: 'Inter', Arial, sans-serif;
+                        font-family: Arial, sans-serif;
                         font-size: 13px;
                         line-height: 1.7;
                         color: #1e293b;
@@ -516,18 +670,5 @@
         janela.document.close();
         janela.focus();
         janela.print();
-        showToast('Janela de impressão aberta — salve como PDF.');
-    }
+        showToast('Janela de impress
 
-    function showToast(msg) {
-        const toast = document.getElementById('toast');
-        toast.textContent = msg;
-        toast.classList.add('show');
-        setTimeout(() => toast.classList.remove('show'), 3000);
-    }
-
-    carregarDocs();
-</script>
-
-</body>
-</html>
