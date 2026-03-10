@@ -6,7 +6,6 @@
     <title>RAG — Histórias de Usuário</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
         :root {
             --primary: #4f46e5;
@@ -355,7 +354,7 @@
                 <div class="icon">📋</div>
                 Histórias Geradas
             </div>
-            <button class="btn btn-success" onclick="baixarPdf()">⬇ Baixar .pdf</button>
+            <button class="btn btn-success" onclick="baixarTxt()">⬇ Baixar .txt</button>
         </div>
         <textarea id="resultado" rows="14" readonly placeholder="As histórias geradas aparecerão aqui..."></textarea>
     </div>
@@ -401,4 +400,93 @@
 
     function triggerUpload() {
         document.getElementById('inputFile').click();
+    }
 
+    async function handleFileChange(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        showToast(`Enviando ${file.name}...`);
+        const formData = new FormData();
+        formData.append('file', file);
+        const res = await fetch('/api/upload', { method: 'POST', body: formData });
+        if (res.ok) {
+            showToast('Documento adicionado e ingestão iniciada!');
+            carregarDocs();
+        } else {
+            showToast('Erro ao enviar o arquivo.');
+        }
+        e.target.value = '';
+    }
+
+    async function deletar(id, nome) {
+        if (!confirm(`Deseja excluir "${nome}"?`)) return;
+        const res = await fetch(`/api/documents/${id}`, { method: 'DELETE' });
+        if (res.ok) {
+            showToast('Documento excluído.');
+            carregarDocs();
+            fecharVisualizador();
+        }
+    }
+
+    function visualizar(url, nome) {
+        document.getElementById('iframePDF').src = url;
+        document.getElementById('viewerTitle').textContent = nome;
+        document.getElementById('viewerWrapper').classList.add('open');
+        document.getElementById('viewerWrapper').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function fecharVisualizador() {
+        document.getElementById('viewerWrapper').classList.remove('open');
+        document.getElementById('iframePDF').src = '';
+    }
+
+    async function gerarHistorias() {
+        const query = document.getElementById('query').value.trim();
+        if (!query) return showToast('Digite o que você está buscando.');
+
+        const btn = document.getElementById('btnGerar');
+        const loading = document.getElementById('loadingMsg');
+        const resultSection = document.getElementById('resultSection');
+
+        btn.disabled = true;
+        loading.classList.add('visible');
+        resultSection.classList.remove('visible');
+
+        const res = await fetch('/api/generate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ query })
+        });
+
+        const data = await res.json();
+        const texto = data.text || data.content || data.output || JSON.stringify(data, null, 2);
+
+        document.getElementById('resultado').value = texto;
+        btn.disabled = false;
+        loading.classList.remove('visible');
+        resultSection.classList.add('visible');
+        resultSection.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function baixarTxt() {
+        const texto = document.getElementById('resultado').value;
+        const blob = new Blob([texto], { type: 'text/plain;charset=utf-8' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `historias-usuario-${Date.now()}.txt`;
+        a.click();
+        showToast('Download iniciado!');
+    }
+
+    function showToast(msg) {
+        const toast = document.getElementById('toast');
+        toast.textContent = msg;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+
+    carregarDocs();
+</script>
+
+</body>
+</html>
