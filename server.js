@@ -1,6 +1,6 @@
 require('dotenv').config();
 const express = require('express');
-const Busboy = require('busboy');
+const { default: Busboy } = require('busboy');
 const fetch = require('node-fetch');
 const { createClient } = require('@supabase/supabase-js');
 
